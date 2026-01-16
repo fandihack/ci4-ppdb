@@ -18,7 +18,7 @@ class Database extends Config
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
-        'DBDebug'      => true,
+        'DBDebug'      => (ENVIRONMENT !== 'production'),
         'charset'      => 'utf8mb4',
         'DBCollat'     => 'utf8mb4_general_ci',
         'swapPre'      => '',
@@ -62,11 +62,15 @@ class Database extends Config
     {
         parent::__construct();
 
-        // Mengisi data database secara dinamis dari Environment Variables Railway
-        $this->default['hostname'] = env('MYSQLHOST', 'db');
-        $this->default['username'] = env('MYSQLUSER', 'ci4');
-        $this->default['password'] = env('MYSQLPASSWORD', 'ci4');
-        $this->default['database'] = env('MYSQLDATABASE', 'ci4db');
+        /**
+         * Mengisi data database secara dinamis.
+         * env('KEY', 'default') 
+         * 'default' akan dipakai jika variabel environment tidak ditemukan (seperti di lokal)
+         */
+        $this->default['hostname'] = env('MYSQLHOST', 'db'); 
+        $this->default['username'] = env('MYSQLUSER', 'ci4'); 
+        $this->default['password'] = env('MYSQLPASSWORD', 'ci4'); 
+        $this->default['database'] = env('MYSQLDATABASE', 'ci4db'); 
         $this->default['port']     = (int) env('MYSQLPORT', 3306);
 
         if (ENVIRONMENT === 'testing') {
