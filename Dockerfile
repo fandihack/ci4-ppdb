@@ -6,16 +6,16 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install intl pdo pdo_mysql mysqli zip \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Enable Apache Rewrite Mode & Fix MPM Conflict
-# Kita matikan mpm_event secara eksplisit di sini agar tidak bentrok dengan prefork
+# 2. Enable Apache Rewrite & Hard Fix MPM Conflict (Hapus fisik file mpm_event)
 RUN a2enmod rewrite \
-    && a2dismod mpm_event || true \
-    && a2enmod mpm_prefork || true
+    && find /etc/apache2/mods-enabled/ -name "mpm_event*" -delete \
+    && find /etc/apache2/mods-enabled/ -name "mpm_worker*" -delete \
+    && a2enmod mpm_prefork
 
 # 3. Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# 4. Set Document Root ke folder /public (Khas CI4)
+# 4. Set Document Root ke folder /public
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
     && sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
@@ -30,7 +30,7 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/writable
 
-# 7. SINKRONISASI PORT (PENTING UNTUK RAILWAY)
+# 7. SINKRONISASI PORT RAILWAY
 RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
 # 8. SETUP ENTRYPOINT
@@ -40,5 +40,5 @@ RUN cp /var/www/html/entrypoint.sh /usr/local/bin/entrypoint.sh \
 
 EXPOSE 80
 
-# Menggunakan path sistem yang sudah kita siapkan
-ENTRYPOINT ["sh", "/usr/local/bin/entrypoint.sh"]
+# Gunakan shell untuk menjalankan entrypoint agar variabel environment terbaca sempurna
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
