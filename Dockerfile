@@ -24,16 +24,20 @@ COPY . /var/www/html
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # 6. Set Permissions
+# Menggunakan 777 pada writable agar Apache (www-data) pasti bisa menulis logs/sessions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/writable
+    && chmod -R 777 /var/www/html/writable
 
-# 7. SETUP ENTRYPOINT
-# Pindahkan entrypoint ke lokasi sistem, bersihkan karakter Windows (\r), dan beri izin eksekusi
+# 7. SINKRONISASI PORT (PENTING UNTUK RAILWAY)
+# Memastikan Apache mendengarkan port yang diberikan Railway (biasanya 80)
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
+
+# 8. SETUP ENTRYPOINT
 RUN cp /var/www/html/entrypoint.sh /usr/local/bin/entrypoint.sh \
     && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
     && chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
 
-# Jalankan menggunakan path sistem yang baru
+# Jalankan menggunakan shell agar lebih stabil
 ENTRYPOINT ["sh", "/usr/local/bin/entrypoint.sh"]
