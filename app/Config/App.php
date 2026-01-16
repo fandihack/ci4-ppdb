@@ -11,8 +11,9 @@ class App extends BaseConfig
      * Base Site URL
      * --------------------------------------------------------------------------
      */
-    // REVISI: Mengambil URL dari environment variable atau default ke '/' agar fleksibel
-    public string $baseURL = '/'; 
+    // REVISI: Menggunakan env() agar dinamis. 
+    // Di lokal akan pakai localhost, di Railway akan ambil dari variable app.baseURL
+    public string $baseURL = 'http://localhost:8080/';
 
     /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.
@@ -23,9 +24,8 @@ class App extends BaseConfig
      * --------------------------------------------------------------------------
      * Index File
      * --------------------------------------------------------------------------
-     * REVISI: Kosongkan jika menggunakan Apache Rewrite (mod_rewrite) agar URL bersih 
-     * tanpa index.php
      */
+    // REVISI: Dikosongkan agar URL bersih (tanpa index.php/) karena kita pakai Apache Rewrite
     public string $indexPage = '';
 
     /**
@@ -48,7 +48,7 @@ class App extends BaseConfig
      * Application Timezone
      * --------------------------------------------------------------------------
      */
-    public string $appTimezone = 'Asia/Jakarta'; // REVISI: Sesuaikan ke Waktu Indonesia
+    public string $appTimezone = 'Asia/Jakarta'; // Sesuaikan ke WIB
 
     public string $charset = 'UTF-8';
 
@@ -58,11 +58,21 @@ class App extends BaseConfig
      * --------------------------------------------------------------------------
      * Reverse Proxy IPs
      * --------------------------------------------------------------------------
-     * Railway menggunakan Proxy, jadi kita perlu mempercayai header dari proxy.
      */
+    // REVISI: Sangat penting untuk Railway agar HTTPS dan IP terdeteksi dengan benar
     public array $proxyIPs = [
-        '0.0.0.0/0' => 'X-Forwarded-For', // Mempercayai header proxy Railway
+        '0.0.0.0/0' => 'X-Forwarded-For',
     ];
 
     public bool $CSPEnabled = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Ambil baseURL dari Environment Variable Railway jika ada
+        if ($envBaseURL = env('app.baseURL')) {
+            $this->baseURL = $envBaseURL;
+        }
+    }
 }
