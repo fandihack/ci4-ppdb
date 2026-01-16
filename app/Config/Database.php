@@ -26,14 +26,14 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => 'db', // Sesuai dengan service name di docker-compose
-        'username'     => 'ci4', // Sesuai dengan MYSQL_USER di docker-compose
-        'password'     => 'ci4', // Sesuai dengan MYSQL_PASSWORD di docker-compose
-        'database'     => 'ci4db', // Sesuai dengan MYSQL_DATABASE di docker-compose
+        'hostname'     => env('MYSQLHOST', 'db'), 
+        'username'     => env('MYSQLUSER', 'ci4'), 
+        'password'     => env('MYSQLPASSWORD', 'ci4'), 
+        'database'     => env('MYSQLDATABASE', 'ci4db'), 
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
-        'DBDebug'      => true,
+        'DBDebug'      => (ENVIRONMENT !== 'production'),
         'charset'      => 'utf8mb4',
         'DBCollat'     => 'utf8mb4_general_ci',
         'swapPre'      => '',
@@ -41,7 +41,7 @@ class Database extends Config
         'compress'     => false,
         'strictOn'     => false,
         'failover'     => [],
-        'port'         => 3306,
+        'port'         => (int) env('MYSQLPORT', 3306),
         'numberNative' => false,
         'foundRows'    => false,
         'dateFormat'   => [
@@ -51,7 +51,33 @@ class Database extends Config
         ],
     ];
 
-    // ... (kode lainnya tetap sama) ...
+    /**
+     * This database connection is used when
+     * running PHPUnit database tests.
+     *
+     * @var array<string, mixed>
+     */
+    public array $tests = [
+        'DSN'         => '',
+        'hostname'    => '127.0.0.1',
+        'username'    => '',
+        'password'    => '',
+        'database'    => ':memory:',
+        'DBDriver'    => 'SQLite3',
+        'DBPrefix'    => 'db_',  // Needed to ensure we're working correctly with prefixes live. CI3 will prefix existing tables and fails
+        'pConnect'    => false,
+        'DBDebug'     => true,
+        'charset'     => 'utf8',
+        'DBCollat'    => 'utf8_general_ci',
+        'swapPre'     => '',
+        'encrypt'     => false,
+        'compress'     => false,
+        'strictOn'     => false,
+        'failover'     => [],
+        'port'        => 3306,
+        'foreignKeys' => true,
+        'busyTimeout' => 1000,
+    ];
 
     public function __construct()
     {
