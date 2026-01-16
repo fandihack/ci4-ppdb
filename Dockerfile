@@ -27,12 +27,13 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/writable
 
-# 7. SETUP ENTRYPOINT (Optimasi Railway)
-# Perintah sed di bawah berfungsi menghapus karakter \r (Windows) agar script lancar di Linux
-RUN sed -i 's/\r$//' /var/www/html/entrypoint.sh \
-    && chmod +x /var/www/html/entrypoint.sh
+# 7. SETUP ENTRYPOINT
+# Pindahkan entrypoint ke lokasi sistem, bersihkan karakter Windows (\r), dan beri izin eksekusi
+RUN cp /var/www/html/entrypoint.sh /usr/local/bin/entrypoint.sh \
+    && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
 
-# Menggunakan "sh" sebagai entrypoint agar lebih stabil mengeksekusi script
-ENTRYPOINT ["sh", "/var/www/html/entrypoint.sh"]
+# Jalankan menggunakan path sistem yang baru
+ENTRYPOINT ["sh", "/usr/local/bin/entrypoint.sh"]
