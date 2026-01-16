@@ -6,8 +6,11 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install intl pdo pdo_mysql mysqli zip \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Enable Apache Rewrite Mode
-RUN a2enmod rewrite
+# 2. Enable Apache Rewrite Mode & Fix MPM Conflict
+# Kita matikan mpm_event secara eksplisit di sini agar tidak bentrok dengan prefork
+RUN a2enmod rewrite \
+    && a2dismod mpm_event || true \
+    && a2enmod mpm_prefork || true
 
 # 3. Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -24,12 +27,10 @@ COPY . /var/www/html
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # 6. Set Permissions
-# Menggunakan 777 pada writable agar Apache (www-data) pasti bisa menulis logs/sessions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/writable
 
 # 7. SINKRONISASI PORT (PENTING UNTUK RAILWAY)
-# Memastikan Apache mendengarkan port yang diberikan Railway (biasanya 80)
 RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
 # 8. SETUP ENTRYPOINT
@@ -39,5 +40,5 @@ RUN cp /var/www/html/entrypoint.sh /usr/local/bin/entrypoint.sh \
 
 EXPOSE 80
 
-# Jalankan menggunakan shell agar lebih stabil
+# Menggunakan path sistem yang sudah kita siapkan
 ENTRYPOINT ["sh", "/usr/local/bin/entrypoint.sh"]
