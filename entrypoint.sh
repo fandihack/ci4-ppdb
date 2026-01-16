@@ -13,14 +13,15 @@ cd /var/www/html
 echo "--- Menjalankan Migrasi ---"
 php spark migrate --all || echo "Migrasi dilewati."
 
-# 3. JALANKAN SEEDER (Data Dummy)
-echo "--- Menjalankan Seeder: DummySeeder ---"
-# Kita tambahkan perintah seed di sini
-php spark db:seed DummySeeder || echo "Seeder dilewati (mungkin data sudah ada)."
+# 3. JALANKAN SEEDER (Data Dummy) - DINONAKTIFKAN
+# echo "--- Menjalankan Seeder: DummySeeder ---"
+# php spark db:seed DummySeeder || echo "Seeder dilewati (mungkin data sudah ada)."
 
 # 4. JAMINAN TERAKHIR (MPM Fix)
 rm -f /etc/apache2/mods-enabled/mpm_event.load
 rm -f /etc/apache2/mods-enabled/mpm_event.conf
+rm -f /etc/apache2/mods-enabled/mpm_worker.load
+rm -f /etc/apache2/mods-enabled/mpm_worker.conf
 
 # 5. Jalankan Apache
 echo "--- Apache Dimulai ---"
