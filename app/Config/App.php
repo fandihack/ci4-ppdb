@@ -7,61 +7,29 @@ use CodeIgniter\Config\BaseConfig;
 class App extends BaseConfig
 {
     /**
-     * --------------------------------------------------------------------------
-     * Base Site URL
-     * --------------------------------------------------------------------------
+     * REVISI TERPENTING:
+     * Langsung masukkan URL Railway kamu di sini. 
+     * Jangan biarkan defaultnya 'http://localhost:8080'.
      */
-    // Default tetap localhost untuk development lokal
-    public string $baseURL = 'http://localhost:8080'; 
+    public string $baseURL = 'https://ci4-ppdb-production.up.railway.app'; 
 
-    /**
-     * Allowed Hostnames
-     */
     public array $allowedHostnames = [];
-
-    /**
-     * --------------------------------------------------------------------------
-     * Index File
-     * --------------------------------------------------------------------------
-     */
     public string $indexPage = '';
-
-    /**
-     * --------------------------------------------------------------------------
-     * URI PROTOCOL
-     * --------------------------------------------------------------------------
-     */
     public string $uriProtocol = 'REQUEST_URI';
-
     public string $permittedURIChars = 'a-z 0-9~%.:_\-';
-
     public string $defaultLocale = 'en';
-
     public bool $negotiateLocale = false;
-
     public array $supportedLocales = ['en'];
-
-    /**
-     * --------------------------------------------------------------------------
-     * Application Timezone
-     * --------------------------------------------------------------------------
-     */
     public string $appTimezone = 'Asia/Jakarta';
-
     public string $charset = 'UTF-8';
 
     /**
-     * --------------------------------------------------------------------------
-     * Force Global Secure Requests
-     * --------------------------------------------------------------------------
+     * Harus TRUE untuk Railway agar tidak ada konflik antara HTTP dan HTTPS
      */
-    // REVISI: Set true agar semua link otomatis menggunakan HTTPS
     public bool $forceGlobalSecureRequests = true;
 
     /**
-     * --------------------------------------------------------------------------
-     * Reverse Proxy IPs
-     * --------------------------------------------------------------------------
+     * Konfigurasi Reverse Proxy Railway
      */
     public array $proxyIPs = [
         '0.0.0.0/0' => 'X-Forwarded-For',
@@ -74,14 +42,12 @@ class App extends BaseConfig
         parent::__construct();
 
         /**
-         * REVISI KRUSIAL:
-         * Railway menyuntikkan variabel environment. Kita coba ambil beberapa variasi
-         * untuk memastikan baseURL tidak jatuh ke default 'localhost'.
+         * Logika ini tetap dipertahankan sebagai cadangan,
+         * tapi sekarang baseURL defaultnya sudah bukan localhost.
          */
-        $siteURL = env('app.baseURL') ?? env('APP_BASEURL') ?? getenv('app.baseURL') ?? getenv('APP_BASEURL');
+        $siteURL = getenv('app.baseURL') ?: getenv('APP_BASEURL') ?: env('app.baseURL');
 
         if ($siteURL) {
-            // Hilangkan trailing slash jika ada agar tidak double slash di URL
             $this->baseURL = rtrim($siteURL, '/');
         }
     }
