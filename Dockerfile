@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install intl pdo pdo_mysql mysqli zip \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Enable Apache Rewrite & Hard Fix MPM Conflict (Hapus fisik file mpm_event)
+# 2. Enable Apache Rewrite & Hard Fix MPM Conflict
 RUN a2enmod rewrite \
     && find /etc/apache2/mods-enabled/ -name "mpm_event*" -delete \
     && find /etc/apache2/mods-enabled/ -name "mpm_worker*" -delete \
@@ -26,8 +26,12 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# 6. Set Permissions
-RUN chown -R www-data:www-data /var/www/html \
+# 6. REVISI: Set Permissions & Pastikan Folder Session Tersedia
+# CodeIgniter membutuhkan folder ini untuk menyimpan status login
+RUN mkdir -p /var/www/html/writable/session \
+    /var/www/html/writable/cache \
+    /var/www/html/writable/logs \
+    && chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/writable
 
 # 7. SINKRONISASI PORT RAILWAY
@@ -40,5 +44,5 @@ RUN cp /var/www/html/entrypoint.sh /usr/local/bin/entrypoint.sh \
 
 EXPOSE 80
 
-# Gunakan shell untuk menjalankan entrypoint agar variabel environment terbaca sempurna
+# Menggunakan shell untuk menjalankan entrypoint
 ENTRYPOINT ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
