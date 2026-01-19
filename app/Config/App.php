@@ -11,12 +11,11 @@ class App extends BaseConfig
      * Base Site URL
      * --------------------------------------------------------------------------
      */
-    // REVISI: Menggunakan env() agar dinamis. 
-    // Di lokal akan pakai localhost, di Railway akan ambil dari variable app.baseURL
-    public string $baseURL = 'http://localhost:8080/';
+    // Default tetap localhost untuk development lokal
+    public string $baseURL = 'http://localhost:8080'; 
 
     /**
-     * Allowed Hostnames in the Site URL other than the hostname in the baseURL.
+     * Allowed Hostnames
      */
     public array $allowedHostnames = [];
 
@@ -25,7 +24,6 @@ class App extends BaseConfig
      * Index File
      * --------------------------------------------------------------------------
      */
-    // REVISI: Dikosongkan agar URL bersih (tanpa index.php/) karena kita pakai Apache Rewrite
     public string $indexPage = '';
 
     /**
@@ -48,18 +46,23 @@ class App extends BaseConfig
      * Application Timezone
      * --------------------------------------------------------------------------
      */
-    public string $appTimezone = 'Asia/Jakarta'; // Sesuaikan ke WIB
+    public string $appTimezone = 'Asia/Jakarta';
 
     public string $charset = 'UTF-8';
 
-    public bool $forceGlobalSecureRequests = false;
+    /**
+     * --------------------------------------------------------------------------
+     * Force Global Secure Requests
+     * --------------------------------------------------------------------------
+     */
+    // REVISI: Set true agar semua link otomatis menggunakan HTTPS
+    public bool $forceGlobalSecureRequests = true;
 
     /**
      * --------------------------------------------------------------------------
      * Reverse Proxy IPs
      * --------------------------------------------------------------------------
      */
-    // REVISI: Sangat penting untuk Railway agar HTTPS dan IP terdeteksi dengan benar
     public array $proxyIPs = [
         '0.0.0.0/0' => 'X-Forwarded-For',
     ];
@@ -70,9 +73,16 @@ class App extends BaseConfig
     {
         parent::__construct();
 
-        // Ambil baseURL dari Environment Variable Railway jika ada
-        if ($envBaseURL = env('app.baseURL')) {
-            $this->baseURL = $envBaseURL;
+        /**
+         * REVISI KRUSIAL:
+         * Railway menyuntikkan variabel environment. Kita coba ambil beberapa variasi
+         * untuk memastikan baseURL tidak jatuh ke default 'localhost'.
+         */
+        $siteURL = env('app.baseURL') ?? env('APP_BASEURL') ?? getenv('app.baseURL') ?? getenv('APP_BASEURL');
+
+        if ($siteURL) {
+            // Hilangkan trailing slash jika ada agar tidak double slash di URL
+            $this->baseURL = rtrim($siteURL, '/');
         }
     }
 }
