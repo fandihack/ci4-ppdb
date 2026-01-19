@@ -10,6 +10,7 @@ echo "--- DEBUG: Environment PORT is: $PORT ---"
 cd /var/www/html
 
 # 2. Jalankan migrasi database
+# Ini akan otomatis membuat tabel seperti 'students' atau 'users' di Railway
 echo "--- Menjalankan Migrasi ---"
 php spark migrate --all || echo "Migrasi dilewati."
 
@@ -24,5 +25,6 @@ rm -f /etc/apache2/mods-enabled/mpm_worker.load
 rm -f /etc/apache2/mods-enabled/mpm_worker.conf
 
 # 5. Jalankan Apache
+# REVISI: Menggunakan apache2-foreground agar log dan sinyal Docker tertangani dengan benar
 echo "--- Apache Dimulai ---"
-exec apache2 -D FOREGROUND
+exec apache2-foreground
