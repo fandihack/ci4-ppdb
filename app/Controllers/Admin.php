@@ -27,13 +27,14 @@ class Admin extends BaseController
         $this->session = Services::session();
         $this->ppdbConfig = new PPDB();
 
-        helper('form');
+        helper(['form', 'url']); // Pastikan helper URL dimuat
     }
 
     public function index()
     {
         if ($this->session->get('admin_logged_in')) {
-            return redirect()->to('/admin/dashboard');
+            // REVISI: Gunakan base_url agar tidak redirect ke localhost
+            return redirect()->to(base_url('admin/dashboard'));
         }
 
         return view('admin/login', ['title' => 'Login Admin']);
@@ -44,8 +45,9 @@ class Admin extends BaseController
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
-        $adminUser = env('ADMIN_USERNAME', 'admin');
-        $adminPass = env('ADMIN_PASSWORD', 'ppdb2024');
+        // Mengambil dari ENV Railway, fallback ke default jika tidak ada
+        $adminUser = env('ADMIN_USERNAME') ?: getenv('ADMIN_USERNAME') ?: 'admin';
+        $adminPass = env('ADMIN_PASSWORD') ?: getenv('ADMIN_PASSWORD') ?: 'ppdb2024';
 
         if ($username === $adminUser && $password === $adminPass) {
             $this->session->set([
@@ -53,7 +55,8 @@ class Admin extends BaseController
                 'admin_username'  => $username
             ]);
 
-            return redirect()->to('/admin/dashboard');
+            // REVISI: Paksa URL absolut
+            return redirect()->to(base_url('admin/dashboard'));
         }
 
         return redirect()->back()->with('error', 'Username atau password salah');
@@ -62,7 +65,8 @@ class Admin extends BaseController
     public function logout()
     {
         $this->session->destroy();
-        return redirect()->to('/admin');
+        // REVISI: Paksa kembali ke halaman login domain Railway
+        return redirect()->to(base_url('admin'));
     }
 
     public function dashboard()
@@ -111,7 +115,8 @@ class Admin extends BaseController
 
         $this->selectionEngine->process($studentId);
 
-        return redirect()->to('/admin/dashboard')
+        // REVISI: Paksa URL absolut
+        return redirect()->to(base_url('admin/dashboard'))
             ->with('success', 'Siswa berhasil ditambahkan');
     }
 
@@ -127,7 +132,8 @@ class Admin extends BaseController
             $db->query("ALTER TABLE students AUTO_INCREMENT = 1");
             $db->query("ALTER TABLE failed_verifications AUTO_INCREMENT = 1");
 
-            return redirect()->to('/admin/dashboard')
+            // REVISI: Paksa URL absolut
+            return redirect()->to(base_url('admin/dashboard'))
                 ->with('success', 'Semua data berhasil direset');
         }
 
@@ -144,17 +150,12 @@ class Admin extends BaseController
         ]);
     }
 
-    /**
-     * 🔒 Jalankan engine seleksi untuk semua siswa
-     */
     public function runSelection()
     {
         $this->checkLogin();
 
-        // Jalankan engine seleksi tanpa siswa baru
         $result = $this->selectionEngine->process();
 
-        // Jika dipanggil via AJAX
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'status' => $result['status'] ?? 'success',
@@ -162,18 +163,19 @@ class Admin extends BaseController
             ]);
         }
 
-        // Redirect jika normal
-        return redirect()->to('/admin/dashboard')
+        // REVISI: Paksa URL absolut
+        return redirect()->to(base_url('admin/dashboard'))
             ->with('success', $result['message'] ?? 'Seleksi berhasil dijalankan');
     }
 
     /**
-     * 🔒 AUTH GUARD — HARUS HARD STOP
+     * 🔒 AUTH GUARD
      */
     private function checkLogin(): void
     {
         if (!$this->session->get('admin_logged_in')) {
-            redirect()->to('/admin')->send();
+            // REVISI KRUSIAL: Gunakan base_url agar tidak terlempar ke localhost saat session habis
+            redirect()->to(base_url('admin'))->send();
             exit;
         }
     }
