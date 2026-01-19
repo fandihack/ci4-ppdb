@@ -12,7 +12,7 @@
                         Riwayat Gagal Verifikasi Pendaftar
                     </h5>
                     <span class="badge bg-light text-danger">
-                        Total: <?= count($failed_data) ?>
+                        Total: <?= is_array($failed_data) ? count($failed_data) : 0 ?>
                     </span>
                 </div>
 
@@ -42,17 +42,21 @@
                                     <tr>
                                         <td class="text-center"><?= $i + 1 ?></td>
                                         <td class="text-center fw-bold"><?= esc($row->nisn) ?></td>
-                                        <td><?= esc($row->name ?? '-') ?></td>
+                                        <td><?= esc($row->name ?? 'Pendaftar Tidak Dikenal') ?></td>
                                         <td>
                                             <span class="badge bg-danger">
                                                 <?= esc($row->reason) ?>
                                             </span>
                                         </td>
                                         <td class="text-center text-muted">
-                                            <?= date('d M Y H:i', strtotime($row->created_at)) ?>
+                                            <?= empty($row->created_at) ? '-' : date('d M Y, H:i', strtotime($row->created_at)) ?>
                                         </td>
                                         <td class="text-center">
-                                            <?php if (!empty($row->attempt_data)): ?>
+                                            <?php 
+                                                // Logika: Cek apakah attempt_data berisi JSON yang valid dan tidak kosong
+                                                $hasAttemptData = !empty($row->attempt_data) && json_decode($row->attempt_data) !== null;
+                                            ?>
+                                            <?php if ($hasAttemptData): ?>
                                                 <button
                                                     class="btn btn-sm btn-outline-secondary"
                                                     data-bs-toggle="modal"
@@ -60,25 +64,29 @@
                                                     <i class="bi bi-eye"></i>
                                                 </button>
                                             <?php else: ?>
-                                                -
+                                                <span class="text-muted small">Tanpa Data</span>
                                             <?php endif ?>
                                         </td>
                                     </tr>
 
-                                    <!-- MODAL DETAIL -->
-                                    <?php if (!empty($row->attempt_data)): ?>
-                                    <div class="modal fade" id="detailModal<?= $row->id ?>" tabindex="-1">
+                                    <?php if ($hasAttemptData): ?>
+                                    <div class="modal fade" id="detailModal<?= $row->id ?>" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-lg modal-dialog-scrollable">
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title">
-                                                        Detail Percobaan Pendaftaran
+                                                        Detail Percobaan: <?= esc($row->nisn) ?>
                                                     </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <pre class="bg-light p-3 rounded small">
-<?= esc(json_encode(json_decode($row->attempt_data), JSON_PRETTY_PRINT)) ?>
+                                                    <p class="small text-muted mb-2">Data mentah yang dikirim pendaftar:</p>
+                                                    <pre class="bg-light p-3 rounded small border">
+<?php 
+    // Logika Prettify JSON agar mudah dibaca di Dashboard Admin
+    $decodedData = json_decode($row->attempt_data, true);
+    echo esc(json_encode($decodedData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+?>
                                                     </pre>
                                                 </div>
                                             </div>
